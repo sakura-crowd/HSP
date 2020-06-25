@@ -1,0 +1,67 @@
+; マップのサイズ(必ず奇数にしてください)
+#const MAP_W 89
+#const MAP_H 9
+#const MAP_SIZE MAP_W * MAP_H
+
+if (MAP_W \ 2 == 0) or (MAP_H \ 2 == 0) {
+	_errmes = "マップの縦と横のサイズは奇数にしてください"
+	dialog _errmes
+	;end
+}
+
+randomize
+// 脇のマスまでのオフセット(上下左右)
+dim offset_side_x_, 4: offset_side_x_(0) =  0: offset_side_x_(1) = 0: offset_side_x_(2) = -1: offset_side_x_(3) = 1 
+dim offset_side_y_, 4: offset_side_y_(0) = -1: offset_side_y_(1) = 1: offset_side_y_(2) =  0: offset_side_y_(3) = 0 
+dim map_disp_char_, 4: map_disp_char_(0) = "+": map_disp_char_(1) = "#": map_disp_char_(2) = "S": map_disp_char_(3) = "G":
+
+; 棒倒し法でマップを作成
+; 参照 自動生成迷路 : http://www5d.biglobe.ne.jp/stssk/maze/make.html
+dim map_, MAP_W * MAP_H
+
+for y, 0, MAP_H
+	for x, 0 , MAP_W
+		if (x == 0) or (y == 0) or (x == (MAP_W - 1)) or (y == (MAP_H - 1)) {
+			map_(y * MAP_W + x) = 1
+		} else {
+			map_(y * MAP_W + x) = 0
+		}
+	next
+next
+map_(1 * MAP_W + 1) = 2
+map_((MAP_H - 2) * MAP_W + MAP_W - 2) = 3
+
+
+for y, 1, MAP_H - 1
+	for x, 1 , MAP_W - 1
+		if ((x \ 2) == 0) and ((y \ 2) == 0) {
+			map_(y * MAP_W + x) = 1
+			if (y == 2) {
+				repeat -1
+					_dir = rnd(5)
+					if _dir < 4 : break
+				loop
+			} else {
+				_dir = rnd(3) + 1
+			}
+			repeat -1
+				if  map_((y + offset_side_y_(_dir)) * MAP_W + x + offset_side_x_(_dir)) = 0 {
+					map_((y + offset_side_y_(_dir)) * MAP_W + x + offset_side_x_(_dir)) = 1
+					break
+				} else {
+					_dir = (_dir + 1) \ 4
+				}
+			loop
+		}
+	next
+next
+
+map_text_ = ""
+for y, 0, MAP_H
+	for x, 0 , MAP_W
+		map_text_ += map_disp_char_(map_((y * MAP_W) + x))
+	next
+	map_text_ += "\n"
+next
+print map_text_
+logmes map_text_
